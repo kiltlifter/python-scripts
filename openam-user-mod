@@ -1,0 +1,339 @@
+#!/usr/bin/python
+__author__ = 'Sean Douglas'
+import os
+import sys
+import getopt
+import getpass
+import re
+
+
+# Explains the options available to users
+USAGE = "Usage: openam-user-mod -A -g ROLE_ADMIN -u scolbert,tuser,bbarker,rwilliams\n\n" + \
+        "Facilitates adding/removing users to groups, adding/deleting users\n" \
+        "and group creation/deletion.\n\n" + \
+        "   -A, --add           add an entry\n" + \
+        "   -D, --delete        delete an entry\n" + \
+        "   -d, --domain        domain name\n" + \
+        "   -g, --group         group name\n" + \
+        "   -l, --list          list ldap entries\n" + \
+        "   -u, --users         user id(s)\n\n" + \
+        "Examples:\n" + \
+        "Remove a user from a group:\n   openam-user-mod -D -g ROLE_ADMIN -u scolbert\n" + \
+        "Add a group:\n   openam-user-mod -A -g ROLE_USER\n" + \
+        "Delete a user:\n   openam-user-mod -D -u jsmith"
+
+
+# Simply Checks if the user id is equal to 0.
+def check_if_root():
+    user_id = os.getuid()
+    if user_id != 0:
+        print "This script must be run as root!"
+        sys.exit(1)
+
+
+# When setting a user password, use getpass to mask character input.
+def get_password():
+    password1 = getpass.getpass("User password: ")
+    password2 = getpass.getpass("Enter again: ")
+    # Do a comparison of the two provided passwords.
+    if password1 != password2:
+        print "Passwords don't match!"
+        sys.exit()
+    else:
+        return password1
+
+
+def ldap_password():
+    password = getpass.getpass("Enter LDAP password: ")
+    return password
+
+
+# Convert the hostname into valid Domain Components.
+def fqdn_parse(hostname):
+    # Create a list based on '.' character.
+    hostname_split = hostname.split(".")
+    ldap_hostname = ""
+    for i in range(len(hostname_split)):
+        # Don't add a comma to the end of the last entry.
+        if i == len(hostname_split) - 1:
+            ldap_hostname = ldap_hostname + "dc=" + hostname_split[i]
+        else:
+            ldap_hostname = ldap_hostname + "dc=" + hostname_split[i] + ","
+    return ldap_hostname
+
+
+# Create a string of unique members that will be used when adding users to groups.
+def unique_members(uid_string, fqdn):
+    # Create a list split by commas.
+    uid_list = uid_string.split(",")
+    members_string = ''
+    for user in uid_list:
+        # Set the unique id to an entry specified by the user. The fqdn variable is what is returned from fqdn_parse().
+        member_str = "uniqueMember: uid=%s,ou=people,dc=opensso,%s" % (user, fqdn)
+        members_string = members_string + member_str + "\n"
+    return members_string
+
+
+def list_users(hostname, password):
+    command = "ldapsearch -x -D 'cn=amadmin,ou=people,dc=opensso,%s'" % hostname + \
+              " -b 'ou=people,dc=opensso,%s' -w '%s'" % (hostname, password)
+    std_output = os.popen(command)
+    results = re.findall("uid:\s(.*)", std_output.read())
+    print "\nCurrent Users:\n--------------"
+    for i in range(len(results)):
+        print "%i. %s" % (i+1, results[i])
+
+
+def list_groups(hostname, password):
+    command = "ldapsearch -x -D 'cn=amadmin,ou=people,dc=opensso,%s'" % hostname + \
+              " -b 'ou=groups,dc=opensso,%s' -w '%s'" % (hostname, password)
+    std_output = os.popen(command)
+    regex_pattern = "#\s(.*),\sgroups, opensso.%s" % os.uname()[1]
+    results = re.findall(regex_pattern, std_output.read())
+    print "\nCurrent Groups:\n--------------"
+    for i in range(len(results)):
+        print "%i. %s" % (i+1, results[i])
+    return results
+
+
+def list_users_in_groups(hostname, password, groups):
+    print "\nGroup Members:\n--------------"
+    for i in range(len(groups)):
+        command = "ldapsearch -x -D 'cn=amadmin,ou=people,dc=opensso,%s'" % hostname + \
+            " -b 'cn=%s,ou=groups,dc=opensso,%s' -w '%s'" % (groups[i], hostname, password)
+        std_output = os.popen(command)
+        results = re.findall('uniqueMember:\suid=(.*),ou=', std_output.read())
+        print "  Group: %s" % groups[i]
+        if len(results) == 0:
+            print "       None"
+        else:
+            for a in range(len(results)):
+                print "    %i. %s" % (a+1, results[a])
+
+
+# Create a new group (Common Name).
+def create_group(argv, hostname):
+    password = ldap_password()
+    # Use the Common Name provided by the user and the result of the fqdn_parse() method.
+    ldif_file = "dn: cn=%s,ou=groups,dc=opensso,%s\n" % (argv['Group'], hostname) + \
+        "objectClass: groupOfUniqueNames\n" + \
+        "objectClass: top\n" + \
+        "cn: %s" % (argv['Group'])
+    # Pipe the ldif_file string into the ldapadd command. The -W option will prompt the user for a LDAP password.
+    command = "echo '%s' | ldapadd -x -D 'cn=amadmin,ou=people,dc=opensso,%s' -w '%s'" % (ldif_file, hostname, password)
+    try:
+        # Run the command string.
+        os.popen(command)
+    except Exception as e:
+        print "Error adding group: \n" + str(e)
+
+
+# Deletes a group (Common Name).
+def delete_group(argv, hostname):
+    password = ldap_password()
+    # An ldif_file is not necessary in this case. We just need to provide the Bind Domain Name (-D args)
+    # followed by the Common Name.
+    command = "ldapdelete -D 'cn=amadmin,ou=people,dc=opensso,%s' " % hostname + \
+              "'cn=%s,ou=groups,dc=opensso,%s' -w '%s'" % (argv['Group'], hostname, password)
+    try:
+        os.popen(command)
+    except Exception as e:
+        print "Error deleting group: \n" + str(e)
+
+
+# Take the users and group specified, and modify the existing group to contain users.
+def add_users_to_group(args, hostname):
+    password = ldap_password()
+    # Here we modify an existing group so it contains specified users.
+    ldif_file = "dn: cn=%s,ou=groups,dc=opensso,%s\n" % (args['Group'], hostname) + \
+        "changeType: modify\n" + \
+        "add: uniqueMember\n" + \
+        "%s" % unique_members(args['Users'], hostname)
+    # Pipe our ldif string into the ldapmodify command.
+    command = "echo '%s' | ldapmodify -x -D 'cn=amadmin,ou=people,dc=opensso,%s' -w '%s'" % (ldif_file, hostname, password)
+    try:
+        os.popen(command)
+    except Exception as e:
+        print "Error adding users to the specified group: \n" + str(e)
+
+
+# Deletes the users specified from a group.
+def delete_users_from_group(args, hostname):
+    password = ldap_password()
+    ldif_file = "dn: cn=%s,ou=groups,dc=opensso,%s\n" % (args['Group'], hostname) + \
+        "changeType: modify\n" + \
+        "delete: uniqueMember\n" + \
+        "%s" % unique_members(args['Users'], hostname)
+    # Pipe our ldif string into ldapmodify to delete specified entries.
+    command = "echo '%s' | ldapmodify -x -D 'cn=amadmin,ou=people,dc=opensso,%s' -w '%s'" % (ldif_file, hostname, password)
+    try:
+        os.popen(command)
+    except Exception as e:
+        print "Error deleting users from the specified group: \n" + str(e)
+
+
+# Create a new ldap user.
+def add_user(args, hostname):
+    # Series of prompts that mirror the web client.
+    first_name = raw_input('First Name: ')
+    last_name = raw_input('Last Name: ')
+    full_name = raw_input('Full Name: ')
+    # Use the get_password method to hide password input. User is prompted twice to confirm they didn't make a mistake.
+    password = get_password()
+    # The objectClass lines were used when OpenAM creates a new users, so I did the same.
+    ldif_file = "dn: uid=%s,ou=people,dc=opensso,%s\n" % (args['Users'], hostname) + \
+        "cn: %s\n" % full_name + \
+        "givenName: %s\n" % first_name + \
+        "sn: %s\n" % last_name + \
+        "inetUserStatus: Active\n" + \
+        "objectClass: devicePrintProfilesContainer\n" + \
+        "objectClass: person\nobjectClass: sunIdentityServerLibertyPPService\n" + \
+        "objectClass: sunFederationManagerDataStore\nobjectClass: inetOrgPerson\n" \
+        "objectClass: iPlanetPreferences\n" + \
+        "objectClass: iplanet-am-auth-configuration-service\nobjectClass: organizationalPerson\n" + \
+        "objectClass: sunFMSAML2NameIdentifier\nobjectClass: inetuser\n" \
+        "objectClass: forgerock-am-dashboard-service\n" + \
+        "objectClass: iplanet-am-managed-person\nobjectClass: sunAMAuthAccountLockout\n" + \
+        "objectClass: iplanet-am-user-service\nobjectClass: top\n" + \
+        "uid: %s\n" % args['Users'] + \
+        "userPassword: %s\n" % password
+    ldap_pass = ldap_password()
+    # The ldif string is passed into ldapadd this time.
+    command = "echo '%s' | ldapadd -x -D 'cn=amadmin,ou=people,dc=opensso,%s' -w '%s'" % (ldif_file, hostname, ldap_pass)
+    try:
+        os.popen(command)
+    except Exception as e:
+        print "Error adding user: \n" + str(e)
+
+
+# Delete a user.
+def delete_user(args, hostname):
+    if args['Users'] == 'amadmin':
+        print "You cannot delete this user."
+        sys.exit()
+    password = ldap_password()
+    # Here we specified the users unique id in ldapdelete.
+    command = "ldapdelete -D 'cn=amadmin,ou=people,dc=opensso,%s' " % hostname + \
+        "'uid=%s,ou=people,dc=opensso,%s' -w '%s'" % (args['Users'], hostname, password)
+    try:
+        os.popen(command)
+    except Exception as e:
+        print "Error deleting user: \n" + str(e)
+
+
+# Method used to determine what arguments the users provides.
+def cmd_opts(argv):
+    command = ''
+    # If a domain name (-d) is not specified, use the one specified on the host.
+    domain = os.uname()[1]
+    group = ''
+    users = ''
+    try:
+        # Formatting used by getopt, it's slightly confusing. argv is the commandline args the user provides.
+        # The second value defines which letter opts take arguments (e.g. -g), designated with a ':' after the char.
+        # The third value defines which long form opts take arguments, designated with a '='.
+        opts, args = getopt.getopt(argv, "hDAld:g:u:", ["help", "delete", "add", "list", "domain=", "group=", "users="])
+    except getopt.GetoptError:
+        # Print our usage constant if we find a problem.
+        print USAGE
+        sys.exit()
+    for opt, arg in opts:
+        # Set the previously initialized variables to the arguments provided.
+        if opt in ("-h", "--help"):
+            print USAGE
+            sys.exit()
+        elif opt in ("-l", "--list"):
+            command = 'list'
+        elif opt in ("-D", "--delete"):
+            command = 'delete'
+        elif opt in ("-A", "--add"):
+            command = 'add'
+        if opt in ("-g", "--group"):
+            group = arg
+        if opt in ("-u", "--users"):
+            users = arg
+        if opt in ("-d", "--domain"):
+            domain = arg
+    return {"Command": command, "Domain": domain, "Group": group, "Users": users}
+
+
+# Figure out what actions to perform based on user input.
+def process_args(arg_dict):
+    process = arg_dict["Command"]
+    action = ''
+    # If there is no Domain name provided instruct the user to use the -d flag.
+    if arg_dict['Domain'] == '':
+        print "Could not retrieve your Fully Qualified Domain name.\n" + \
+            "Please specify it manually with the '-d or --domain' option."
+        sys.exit()
+    # If a user is provided with no group, assume the user wishes to modify a user.
+    elif arg_dict['Group'] == '' and arg_dict['Users'] != '':
+        user = arg_dict['Users'].split(",")
+        # Only allow the user to create one user at a time.
+        if len(user) > 1:
+            print "Please only add one user at a time."
+            sys.exit()
+        else:
+            action = 'Modify Users'
+    # If a group and user(s) are not provided, show the usage message.
+    elif arg_dict['Group'] == '' and arg_dict['Users'] == '':
+        if arg_dict['Command'] == 'list':
+            action = 'list'
+        else:
+            print USAGE
+            sys.exit()
+    # If a group is specifed and no users, assume they wish to modify a group.
+    elif arg_dict['Group'] != '' and arg_dict['Users'] == '':
+        action = 'Modify Group'
+    # The default is to modify users in a group.
+    else:
+        action = "Modify Users in Group"
+    return [process, action]
+
+
+# Based on what we infer in the process_args() method, lets call the necessary methods.
+def execute_commands(args, actions):
+    # The properly parsed Domain Components are need by everything.
+    hostname = fqdn_parse(args['Domain'])
+    if actions[0] == 'list':
+        password = getpass.getpass("Enter LDAP Password: ")
+        list_users(hostname, password)
+        groups = list_groups(hostname, password)
+        list_users_in_groups(hostname, password, groups)
+    # If process equals 'add' then:
+    elif actions[0] == 'add':
+        # If the action specified is 'Modify Group' then execute the create_group() method.
+        if actions[1] == 'Modify Group':
+            create_group(args, hostname)
+        # If the action specified is 'Modify Users' then execute the add_user() method.
+        elif actions[1] == 'Modify Users':
+            add_user(args, hostname)
+        # Otherwise we must be trying to add user(s) to an existing group.
+        else:
+            add_users_to_group(args, hostname)
+    # If a process doesn't equal 'add', then it must be delete.
+    else:
+        # If action is 'Modify Group', then execute the delete_group() method.
+        if actions[1] == 'Modify Group':
+            delete_group(args, hostname)
+        # If action is 'Modify Users', then execute the delete_user() method.
+        elif actions[1] == 'Modify Users':
+            delete_user(args, hostname)
+        # Otherwise we must be removing users from an existing group.
+        else:
+            delete_users_from_group(args, hostname)
+
+
+def main():
+    # Execute the check_if_root() command to make sure we have permissions to modify LDAP.
+    check_if_root()
+    # Save user provided arguments as a dictionary that we can pass around.
+    args = cmd_opts(sys.argv[1:])
+    # Determine what actions to perform based on the args we received.
+    actions = process_args(args)
+    # Finally, execute upon our actions.
+    execute_commands(args, actions)
+
+
+if __name__ == '__main__':
+    main()
