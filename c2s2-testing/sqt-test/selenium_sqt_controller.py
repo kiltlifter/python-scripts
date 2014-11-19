@@ -1,6 +1,7 @@
 #!/usr/bin/python
 __author__ = 'sdouglas'
 
+
 import alfresco_sqt_testing_selenium
 import geoserver_sqt_testing_selenium
 import liferay_sqt_testing_selenium
@@ -10,6 +11,7 @@ import rails_sqt_testing_selenium
 import getpass
 import optparse
 import pxssh
+import time
 
 
 def alfresco_test(hostname, document):
@@ -81,12 +83,17 @@ def rails_test(hostname, password):
         s.prompt()
         s.sendline(password)
         s.prompt()
-        s.sendline("rails new /var/lib/rails-app && chown -R apache:apache /var/lib/rails-app && "
-                   + create_file_command + " && /etc/init.d/httpd restart")
+        s.sendline("rails new /var/lib/rails-app && chown -R apache:apache /var/lib/rails-app")
+        s.prompt()
+        s.sendline(create_file_command)
+        s.prompt()
+        print "Restarting httpd..."
+        s.sendline("/sbin/service httpd restart")
         s.close()
     except Exception, e:
         print "Error executing ssh commands on " + hostname + ": \n\n" + str(e) + "\n\n"
 
+    time.sleep(3)
     rails = rails_sqt_testing_selenium.RailsSeleniumTest('setUp')
     try:
         rails.setUp(hostname)
@@ -116,6 +123,23 @@ def verify_password(text):
         exit()
 
 
+def tear_down(results, hostname, devel_pass):
+    if results[-1][0:3] == "[+]":
+        try:
+            s = connect(hostname, "devel", devel_pass)
+            s.sendline("sudo su")
+            s.expect("assword")
+            s.prompt()
+            s.sendline(devel_pass)
+            s.prompt()
+            s.sendline("rm -rf /var/lib/rails-app /etc/httpd/conf.d/rails.webapp")
+            s.prompt()
+            s.sendline("/sbin/service httpd restart")
+        except Exception, e:
+            print "Exception thrown:\n\n" + str(e) + "\n\n"
+        exit()
+
+
 def main():
     parser = optparse.OptionParser("selenium_sqt_controller.py -d <domain> -f <filename>")
     parser.add_option('-d', dest='domain', type='string', help='specify a domain name')
@@ -127,17 +151,19 @@ def main():
         print parser.usage
         exit()
     amadmin_password = verify_password("Enter password for amadmin: ")
-    #devel_pass = verify_password("Enter password for devel: ")
+    devel_pass = verify_password("Enter password for devel: ")
     results = [
         alfresco_test(domain, fileName),
         geoserver_test(domain),
         liferay_test(domain),
         openam_test(domain, amadmin_password),
         owf_test(domain),
-        #rails_test(domain, devel_pass)
+        rails_test(domain, devel_pass)
     ]
     for result in results:
         print result
+    tear_down(results, domain, devel_pass)
+
 
 if __name__ == "__main__":
     main()
