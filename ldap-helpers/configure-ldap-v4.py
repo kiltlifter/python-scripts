@@ -2,6 +2,9 @@
 import os
 import getpass
 import time
+import hashlib
+import os
+from base64 import urlsafe_b64encode as encode
 from subprocess import *
 
 
@@ -23,11 +26,11 @@ def find_dc(domain_name):
     return combo_string
 
 
-def password_hash(passwd):
-    slapd_command = "slappasswd -s %s" % (passwd)
-    hashed_pass = os.popen(slapd_command, "r")
-    temp_hash = hashed_pass.read()
-    return temp_hash.rstrip("\r\n")
+def password_hash(password):
+    salt = os.urandom(4)
+    h = hashlib.sha1(str(password))
+    h.update(salt)
+    return "{SSHA}" + encode(h.digest() + salt)
 
 
 def add_olcRootPW(pass_hash, input_file):
@@ -59,7 +62,7 @@ def check_if_passwords_match(pass1, pass2):
         return pass1
     else:
         print "Passwords don't match."
-        sys.exit()
+        exit()
 
 
 def domain_name_prompt():
@@ -291,13 +294,13 @@ def execute_commands(fqdn, ldap_password, amadmin_password):
 def main():
     check_if_root()
     fqdn = domain_name_prompt()
-    ldap_password1 = getpass.getpass("Create a LDAP password (acceptable characters are [A-Za-z0-9./]): ")
+    ldap_password1 = getpass.getpass("Create a LDAP password: ")
     ldap_password2 = getpass.getpass("Enter one more time: ")
     ldap_password = check_if_passwords_match(ldap_password1, ldap_password2)
-    amadmin_password1 = getpass.getpass("Create an amadmin password (acceptable characters are [A-Za-z0-9./]): ")
+    amadmin_password1 = getpass.getpass("Create an amadmin password: ")
     amadmin_password2 = getpass.getpass("Enter one more time: ")
     amadmin_password = check_if_passwords_match(amadmin_password1, amadmin_password2)
-    execute_commands(fqdn, ldap_password, amadmin_password)
+    execute_commands(fqdn, str(ldap_password), str(amadmin_password))
 
 
 if __name__ == '__main__':
