@@ -24,7 +24,7 @@ def setup_openam(hostName, amadmin_password):
     openam = configure_openam_selenium.ConfigureOpenamSelenium2('setUp')
     try:
         openam.setUp(hostname=hostName)
-        openam.test_configure_openam_selenium2(hostname=hostName, amadmin_pass=amadmin_password)
+        openam.test_configure_openam_selenium2(hostname=hostName, amadmin_pass=str(amadmin_password))
         openam.tearDown()
         return "[+] OpenAM: Success"
     except Exception, e:
@@ -53,7 +53,7 @@ def main():
     amadmin_password = verify_password("Enter amadmin Password: ")
     results = [
         setup_openam(host_name, amadmin_password),
-        setup_liferay(host_name)
+        #setup_liferay(host_name)
     ]
     
     for result in results:

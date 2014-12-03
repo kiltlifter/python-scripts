@@ -62,7 +62,7 @@ def check_if_passwords_match(pass1, pass2):
         return pass1
     else:
         print "Passwords don't match."
-        exit()
+        sys.exit()
 
 
 def domain_name_prompt():
@@ -300,7 +300,7 @@ def main():
     amadmin_password1 = getpass.getpass("Create an amadmin password: ")
     amadmin_password2 = getpass.getpass("Enter one more time: ")
     amadmin_password = check_if_passwords_match(amadmin_password1, amadmin_password2)
-    execute_commands(fqdn, str(ldap_password), str(amadmin_password))
+    execute_commands(fqdn, ldap_password, amadmin_password)
 
 
 if __name__ == '__main__':
