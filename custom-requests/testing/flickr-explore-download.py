@@ -4,7 +4,7 @@ import requests, os, json
 from datetime import date
 
 today = date.today()
-url = "https://secure.flickr.com/explore?data=1&day=" + str(today) + "&view=ju&start=50&count=100&append=1&magic_cookie=7973d5676566ff2077beed4f5636d248"
+url = "https://secure.flickr.com/explore?data=1&day=" + str(today) + "&view=ju&start=50&count=100&append=1&magic_cookie="
 headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'}
 
 def query_flickr_api():
