@@ -1,5 +1,0 @@
-Alias /rails /var/lib/rails-app/public
-<Directory /var/lib/rails-app/public>
-Allow from all
-PassengerAppRoot “/var/lib/rails-app/public”
-</Directory>
