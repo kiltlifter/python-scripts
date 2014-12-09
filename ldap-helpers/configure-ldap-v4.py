@@ -26,12 +26,17 @@ def find_dc(domain_name):
     return combo_string
 
 
-def password_hash(password):
-    salt = os.urandom(4)
-    h = hashlib.sha1(str(password))
-    h.update(salt)
-    return "{SSHA}" + encode(h.digest() + salt)
+#def password_hash(password):
+#    salt = os.urandom(4)
+#    h = hashlib.sha1(str(password))
+#    h.update(salt)
+#    return "{SSHA}" + encode(h.digest() + salt)
 
+
+def password_hash(password):
+    hash_command = "slappasswd -s %s" % password
+    slapd_pass = Popen(hash_command, shell=True, stdout=PIPE).stdout.read()
+    return slapd_pass.rstrip("\n")
 
 def add_olcRootPW(pass_hash, input_file):
     olcRootPW_command = "echo 'olcRootPW: %s' >> %s" % (pass_hash, input_file)
@@ -294,10 +299,10 @@ def execute_commands(fqdn, ldap_password, amadmin_password):
 def main():
     check_if_root()
     fqdn = domain_name_prompt()
-    ldap_password1 = getpass.getpass("Create a LDAP password: ")
+    ldap_password1 = getpass.getpass("Create a LDAP password (acceptable characters are [A-Za-z0-9./]): ")
     ldap_password2 = getpass.getpass("Enter one more time: ")
     ldap_password = check_if_passwords_match(ldap_password1, ldap_password2)
-    amadmin_password1 = getpass.getpass("Create an amadmin password: ")
+    amadmin_password1 = getpass.getpass("Create an amadmin password (acceptable characters are [A-Za-z0-9./]): ")
     amadmin_password2 = getpass.getpass("Enter one more time: ")
     amadmin_password = check_if_passwords_match(amadmin_password1, amadmin_password2)
     execute_commands(fqdn, ldap_password, amadmin_password)
