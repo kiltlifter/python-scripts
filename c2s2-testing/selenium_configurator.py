@@ -52,7 +52,7 @@ def main():
         exit()
     amadmin_password = verify_password("Enter amadmin Password: ")
     results = [
-        #setup_openam(host_name, amadmin_password),
+        setup_openam(host_name, amadmin_password),
         setup_liferay(host_name)
     ]
     
