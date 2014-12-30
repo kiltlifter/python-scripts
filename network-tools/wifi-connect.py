@@ -17,18 +17,25 @@ def dhcp_request(interface):
     Popen(command, shell=True, executable="/bin/bash")
 
 
+def kill_process_by_name(name):
+    search_query = "ps ax | grep -E '%s'" % name
+    search_result = Popen(search_query, shell=True, stdout=PIPE).stdout.read().split("\n")[:-3]
+    if search_result:
+        for result in search_result:
+            print "killing process %s" % result.split()[0]
+            os.kill(int(result.split()[0]), 15)
+
+
 def execute_functions(interface, ssid, password):
     with open("wpa_supplicant.log", "w") as log_file:
         check = ""
-        connection = wpa_supplicant_connect(interface, ssid, password, log_file)
-        connection_pids = [connection.pid, connection.pid + 1]
+        wpa_supplicant_connect(interface, ssid, password, log_file)
         dhcp_request(interface)
         while check != "stop":
             print "Interface %s connected to SSID %s." % (interface, ssid)
             check = raw_input("Enter 'stop' to disconnect\n")
         print "Exiting..."
-        os.kill(connection_pids[0], 15)
-        os.kill(connection_pids[1], 15)
+        kill_process_by_name("wpa_supplicant|dhclient")
     os.remove("wpa_supplicant.log")
 
 
@@ -43,6 +50,7 @@ def main():
     else:
         password = getpass.getpass("Network Password: ")
         execute_functions(options.iface, options.ssid, password)
+
 
 if __name__ == '__main__':
     main()
