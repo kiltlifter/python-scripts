@@ -4,7 +4,7 @@ __author__ = 'blackglas'
 from subprocess import *
 import optparse
 import getpass
-import re
+import os
 
 
 def wpa_supplicant_connect(interface, ssid, password, log_file):
@@ -23,12 +23,13 @@ def execute_functions(interface, ssid, password):
         connection = wpa_supplicant_connect(interface, ssid, password, log_file)
         connection_pids = [connection.pid, connection.pid + 1]
         dhcp_request(interface)
-        while check != re.match("[S|s]top", check):
-            Popen("clear")
+        while check != "stop":
             print "Interface %s connected to SSID %s." % (interface, ssid)
-            check = raw_input("Enter 'stop' to disconnect")
-        command = "kill %s %s" % (connection_pids[0], connection_pids[1])
-        Popen(command, shell=True, stderr=PIPE).stderr.read()
+            check = raw_input("Enter 'stop' to disconnect\n")
+        print "Exiting..."
+        os.kill(connection_pids[0], 15)
+        os.kill(connection_pids[1], 15)
+    os.remove("wpa_supplicant.log")
 
 
 def main():
