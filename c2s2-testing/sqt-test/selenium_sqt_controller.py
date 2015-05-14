@@ -8,10 +8,9 @@ import liferay_sqt_testing_selenium
 import openam_sqt_testing_selenium
 import owf_sqt_testing_selenium
 import rails_sqt_testing_selenium
+from subprocess import Popen
 import getpass
 import optparse
-import pxssh
-import time
 
 
 def alfresco_test(hostname, document):
@@ -69,50 +68,19 @@ def owf_test(hostname):
         return "[-] Ozone Widget Framework: Failure\n\n" + str(e) + "\n\n"
 
 
-def rails_test(hostname, password):
-    rails_webapp = "Alias /rails /var/lib/rails-app/public\n" \
-               "<Directory /var/lib/rails-app/public>\n" \
-               "Allow from all\n" \
-               "PassengerAppRoot \"/var/lib/rails-app/public\"\n" \
-               "</Directory>"
-    create_file_command = "echo -e '%s' > /etc/httpd/conf.d/rails.webapp" % rails_webapp
-    try:
-        s = connect(hostname, "devel", password)
-        s.sendline("sudo su")
-        s.expect("assword")
-        s.prompt()
-        s.sendline(password)
-        s.prompt()
-        s.sendline("rails new /var/lib/rails-app && chown -R apache:apache /var/lib/rails-app")
-        s.prompt()
-        s.sendline(create_file_command)
-        s.prompt()
-        print "Restarting httpd..."
-        s.sendline("/sbin/service httpd restart")
-        s.close()
-    except Exception, e:
-        print "Error executing ssh commands on " + hostname + ": \n\n" + str(e) + "\n\n"
-
-    time.sleep(3)
+def rails_test(hostname, devel_pass):
     rails = rails_sqt_testing_selenium.RailsSeleniumTest('setUp')
     try:
-        rails.setUp(hostname)
+        ssh_connection = "./ssh_connect.sh devel %s %s" % (hostname, devel_pass)
+        Popen(ssh_connection, shell=True, stdout=PIPE).stdout.read()
+        rails.setUp(hostname=hostname)
         rails.test_rails()
         rails.tearDown()
-        return "[+] Rails Webapp: Success"
+        return "[+] Rails Sample Application Success"
     except Exception, e:
-        return "[-] Rails Webapp: Failure\n\n" + str(e) + "\n\n"
+        return "[-] Rails Sample Application: Failure\n\n" + str(e) + "\n\n"
 
-
-def connect(host, username, password):
-    try:
-        c = pxssh.pxssh()
-        c.login(host, username, password)
-        return c
-    except Exception, e:
-        print "Error Connecting: \n" + str(e)
-
-
+ 
 def verify_password(text):
     tmp_pass1 = getpass.getpass(text)
     tmp_pass2 = getpass.getpass("One more time: ")
@@ -120,23 +88,6 @@ def verify_password(text):
         return tmp_pass1
     else:
         print "Password's don't match."
-        exit()
-
-
-def tear_down(results, hostname, devel_pass):
-    if results[-1][0:3] == "[+]":
-        try:
-            s = connect(hostname, "devel", devel_pass)
-            s.sendline("sudo su")
-            s.expect("assword")
-            s.prompt()
-            s.sendline(devel_pass)
-            s.prompt()
-            s.sendline("rm -rf /var/lib/rails-app /etc/httpd/conf.d/rails.webapp")
-            s.prompt()
-            s.sendline("/sbin/service httpd restart")
-        except Exception, e:
-            print "Exception thrown:\n\n" + str(e) + "\n\n"
         exit()
 
 
@@ -153,16 +104,15 @@ def main():
     amadmin_password = verify_password("Enter password for amadmin: ")
     devel_pass = verify_password("Enter password for devel: ")
     results = [
-        alfresco_test(domain, fileName),
-        geoserver_test(domain),
-        liferay_test(domain),
-        openam_test(domain, amadmin_password),
-        owf_test(domain),
+        #alfresco_test(domain, fileName),
+        #geoserver_test(domain),
+        #liferay_test(domain),
+        #openam_test(domain, amadmin_password),
+        #owf_test(domain),
         rails_test(domain, devel_pass)
     ]
     for result in results:
         print result
-    tear_down(results, domain, devel_pass)
 
 
 if __name__ == "__main__":
