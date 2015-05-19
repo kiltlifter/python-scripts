@@ -320,6 +320,314 @@ def stig_v_38477(connection):
     update_row(connection, values)
 
 
+def stig_v_38478(connection):
+    stig_id = "V-38478"
+    # Not relevant on debian
+    check_command_debian = "None"
+    # Exit code will be zero if found, 1 if not
+    check_command_redhat = "/sbin/chkconfig --list rhnsd | grep -o \"[2345]:on\""
+    fix_command_debian = "None"
+    fix_command_redhat = "/sbin/chkconfig rhnsd off && /sbin/service rhnsd stop"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38479(connection):
+    stig_id = "V-38479"
+    # Output of the following command will be null if PASS_MIN_DAYS is set to 60 or less.
+    check_command_debian = """
+        if [[ -z $(/bin/sed -n '/\<PASS_MAX_DAYS\>/p' /etc/login.defs) ]]; \
+        then echo "Directive not found."; \
+        else /bin/sed -n '/\(^#\?PASS_MAX_DAYS.*\)/p' /etc/login.defs | /usr/bin/awk -F " " '{ \
+        if (/#/) { print "Max days not set." } \
+        else if ($2 > 60) {print "Password expiration should not exceed 60 days."}}'; \
+        fi
+    """
+    check_command_redhat = """
+        if [[ -z $(/bin/sed -n '/\<PASS_MAX_DAYS\>/p' /etc/login.defs) ]]; \
+        then echo "Directive not found."; \
+        else /bin/sed -n '/\(^#\?PASS_MAX_DAYS.*\)/p' /etc/login.defs | /bin/awk -F " " '{ \
+        if (/#/) { print "Max days not set." } \
+        else if ($2 > 60) {print "Password expiration should not exceed 60 days."}}'; \
+        fi
+    """
+    fix_command_debian = """
+        if [[ -z $(/bin/sed -n '/\<PASS_MAX_DAYS\>/p' /etc/login.defs) ]];then \
+        echo "PASS_MAX_DAYS    60" >> /etc/login.defs;else \
+        /bin/sed -i 's/^#\?\s\?\(PASS_MAX_DAYS\).*/\1    60/' /etc/login.defs;fi
+    """
+    fix_command_redhat = """
+        if [[ -z $(/bin/sed -n '/\<PASS_MAX_DAYS\>/p' /etc/login.defs) ]];then \
+        echo "PASS_MAX_DAYS    60" >> /etc/login.defs;else \
+        /bin/sed -i 's/^#\?\s\?\(PASS_MAX_DAYS\).*/\1    60/' /etc/login.defs;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38480(connection):
+    stig_id = "V-38480"
+    # Output of the following command will be null if PASS_WARN_AGE is set to 7.
+    check_command_debian = """
+        if [[ -z $(/bin/sed -n '/\<PASS_WARN_AGE\>/p' /etc/login.defs) ]]; \
+        then echo "Directive not found."; \
+        else /bin/sed -n '/\(^#\?PASS_WARN_AGE.*\)/p' /etc/login.defs | /usr/bin/awk -F " " '{ \
+        if (/#/) { print "Pass warn days not set." } \
+        else if ($2 != 7) {print "Password warn days should be 7."}}'; \
+        fi
+    """
+    check_command_redhat = """
+        if [[ -z $(/bin/sed -n '/\<PASS_WARN_AGE\>/p' /etc/login.defs) ]]; \
+        then echo "Directive not found."; \
+        else /bin/sed -n '/\(^#\?PASS_WARN_AGE.*\)/p' /etc/login.defs | /bin/awk -F " " '{ \
+        if (/#/) { print "Pass warn days not set." } \
+        else if ($2 != 7) {print "Password warn days should be 7."}}'; \
+        fi
+    """
+    fix_command_debian = """
+        if [[ -z $(/bin/sed -n '/\<PASS_WARN_AGE\>/p' /etc/login.defs) ]];then \
+        echo "PASS_MAX_DAYS    7" >> /etc/login.defs;else \
+        /bin/sed -i 's/^#\?\s\?\(PASS_WARN_AGE\).*/\1    7/' /etc/login.defs;fi
+    """
+    fix_command_redhat = """
+        if [[ -z $(/bin/sed -n '/\<PASS_WARN_AGE\>/p' /etc/login.defs) ]];then \
+        echo "PASS_MAX_DAYS    7" >> /etc/login.defs;else \
+        /bin/sed -i 's/^#\?\s\?\(PASS_WARN_AGE\).*/\1    7/' /etc/login.defs;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38482(connection):
+    stig_id = "V-38482"
+    check_command_debian = "None"
+    # Returns a 0 if set properly
+    check_command_redhat = "/bin/grep dcredit=-1 /etc/pam.d/system-auth"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -e 's/pam_cracklib.so/pam_cracklib.so dcredit=-1/' /etc/pam.d/system-auth"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38483(connection):
+    stig_id = "V-38483"
+    check_command_debian = "None"
+    # Returns 0 if found
+    check_command_redhat = "/bin/grep gpgcheck=1 /etc/yum.conf"
+    fix_command_debian = "None"
+    fix_command_redhat = """
+        if [[ -z $(/bin/grep gpgcheck /etc/yum.conf) ]];then \
+        /bin/echo "gpgcheck=1" >> /etc/yum.conf; \
+        else /bin/sed -i 's/gpgcheck=./gpgcheck=1/' /etc/yum.conf;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38487(connection):
+    stig_id = "V-38487"
+    check_command_debian = "None"
+    check_command_redhat = "/bin/grep \"gpgcheck=0\" /etc/yum.conf"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i '/gpgcheck=0/d' /etc/yum.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38489(connection):
+    stig_id = "V-38489"
+    check_command_debian = ""
+    check_command_redhat = "/bin/rpm -qa | grep aide"
+    fix_command_debian = ""
+    fix_command_redhat = "/usr/bin/yum install aide"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38490(connection):
+    stig_id = "V-38490"
+    check_command_debian = ""
+    check_command_redhat = "/bin/grep -ir \"install usb-storage /bin/true\" /etc/modprobe.d/"
+    fix_command_debian = ""
+    fix_command_redhat = "/bin/echo \"install usb-storage /bin/true\" > /etc/modprobe.d/usb-disable.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38491(connection):
+    stig_id = "V-38491"
+    check_command_debian = "/usr/bin/find /home /etc \( -name \".rhosts\" -o -name \"hosts.equiv\" \)"
+    check_command_redhat = "/bin/find /home /etc \( -name \".rhosts\" -o -name \"hosts.equiv\" \)"
+    fix_command_debian = "/usr/bin/find /home /etc \( -name \".rhosts\" -o -name \"hosts.equiv\" \) -exec rm {} \;"
+    fix_command_redhat = "/bin/find /home /etc \( -name \".rhosts\" -o -name \"hosts.equiv\" \) -exec rm {} \;"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38492(connection):
+    stig_id = "V-38492"
+    check_command_debian = "/bin/grep \"^vc/*\" /etc/securetty"
+    check_command_redhat = "/bin/grep \"^vc/*\" /etc/securetty"
+    fix_command_debian = "/bin/sed -i '/^vc\/.*/d' /etc/securetty"
+    fix_command_redhat = "/bin/sed -i '/^vc\/.*/d' /etc/securetty"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38494(connection):
+    stig_id = "V-38494"
+    check_command_debian = "/bin/grep \"ttyS.*\" /etc/securetty"
+    check_command_redhat = "/bin/grep \"ttyS.*\" /etc/securetty"
+    fix_command_debian = "/bin/sed -i '/^ttyS.*/d' /etc/securetty"
+    fix_command_redhat = "/bin/sed -i '/^ttyS.*/d' /etc/securetty"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38495(connection):
+    stig_id = "V-38495"
+    check_command_debian = "/bin/grep \"^log_file\" /etc/audit/auditd.conf|/bin/sed s/^[^\/]*//|" \
+                           "/usr/bin/xargs /usr/bin/stat -c %U:%n " \
+                           "| /usr/bin/awk -F \":\" '{if ($1 != \"root\") {print $2}}'"
+    check_command_redhat = "/bin/grep \"^log_file\" /etc/audit/auditd.conf|/bin/sed s/^[^\/]*//|" \
+                           "/usr/bin/xargs /usr/bin/stat -c %U:%n " \
+                           "| /bin/awk -F \":\" '{if ($1 != \"root\") {print $2}}'"
+    fix_command_debian = "/bin/chown root $(/bin/grep \"^log_file\" /etc/audit/auditd.conf|/bin/sed s/^[^\/]*//" \
+                         "|/usr/bin/xargs /usr/bin/stat -c %U:%n | /usr/bin/awk -F \":\" '{print $2}')"
+    fix_command_redhat = "/bin/chown root $(/bin/grep \"^log_file\" /etc/audit/auditd.conf|/bin/sed s/^[^\/]*//" \
+                         "|/usr/bin/xargs /usr/bin/stat -c %U:%n | /bin/awk -F \":\" '{print $2}')"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38497(connection):
+    stig_id = "V-38497"
+    check_command_debian = "None"
+    check_command_redhat = "/bin/grep nullok /etc/pam.d/system-auth /etc/pam.d/system-auth-ac"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i 's/\snullok//' /etc/pam.d/system-auth /etc/pam.d/system-auth-ac"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38498(connection):
+    stig_id = "V-38498"
+    check_command_debian = """
+        /bin/grep "^log_file" /etc/audit/auditd.conf|/bin/sed s/^[^\/]*//|/usr/bin/xargs /usr/bin/stat -c %a|
+        /usr/bin/awk '{if ($NF != 640) {print "Incorrect permissions " $NF}}'
+    """
+    check_command_redhat = """
+        /bin/grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//|/usr/bin/xargs /usr/bin/stat -c %a| \
+        /bin/awk '{if ($NF != 640) {print "Incorrect permissions " $NF}}'
+    """
+    fix_command_debian = "/bin/chmod 0640 $(/bin/grep \"^log_file\" /etc/audit/auditd.conf" \
+                         "|/bin/sed s/^[^\/]*//|/usr/bin/xargs /usr/bin/stat -c %n)"
+    fix_command_redhat = "/bin/chmod 0640 $(/bin/grep \"^log_file\" /etc/audit/auditd.conf" \
+                         "|/bin/sed s/^[^\/]*//|/usr/bin/xargs /usr/bin/stat -c %n)"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38499(connection):
+    stig_id = "V-38499"
+    # If anything other than x is stored in the second field, it is printed and assumed to be crypted passwd
+    check_command_debian = "/usr/bin/awk -F \":\" '{if ($2 != \"x\") {print $2}}' /etc/passwd"
+    check_command_redhat = "/bin/awk -F \":\" '{if ($2 != \"x\") {print $2}}' /etc/passwd"
+    fix_command_debian = "None"
+    fix_command_redhat = "None"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38500(connection):
+    stig_id = "V-38500"
+    check_command_debian = "/usr/bin/awk -F \":\" '{if ($3 == \"0\" && $1 != \"root\") {print $1}}' /etc/passwd"
+    check_command_redhat = "/bin/awk -F \":\" '{if ($3 == \"0\" && $1 != \"root\") {print $1}}' /etc/passwd"
+    fix_command_debian = "/usr/sbin/userdel $(/usr/bin/awk -F \":\" " \
+                         "'{if ($3 == \"0\" && $1 != \"root\") {print $1}}' /etc/passwd)"
+    fix_command_redhat = "/usr/sbin/userdel $(/bin/awk -F \":\" " \
+                         "'{if ($3 == \"0\" && $1 != \"root\") {print $1}}' /etc/passwd)"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38501(connection):
+    stig_id = "V-38501"
+    check_command_debian = "None"
+    check_command_redhat = "/bin/grep \"fail_interval\" /etc/pam.d/system-auth-ac"
+    fix_command_debian = ""
+    fix_command_redhat = """
+        /bin/sed -i '/^auth.*pam_unix\.so/a \
+        auth [default=die] pam_faillock.so authfail deny=3 unlock_time=604800 fail_interval=900\n \
+        auth required pam_faillock.so authsucc deny=3 unlock_time=604800 fail_interval=900' \
+        /etc/pam.d/system-auth /etc/pam.d/password-auth
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38502(connection):
+    stig_id = "V-38502"
+    check_command_debian = "/usr/bin/find /etc/shadow -user root"
+    check_command_redhat = "/bin/find /etc/shadow -user root"
+    fix_command_debian = "/bin/chown root /etc/shadow"
+    fix_command_redhat = "/bin/chown root /etc/shadow"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38503(connection):
+    stig_id = "V-38503"
+    check_command_debian = "/usr/bin/find /etc/shadow -group root"
+    check_command_redhat = "/bin/find /etc/shadow -group root"
+    fix_command_debian = "/bin/chgrp root /etc/shadow"
+    fix_command_redhat = "/bin/chgrp root /etc/shadow"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38504(connection):
+    stig_id = "V-38504"
+    # exit code should be 0, and contain the string /etc/shadow
+    check_command_debian = "/usr/bin/find /etc/shadow -perm 0000"
+    check_command_redhat = "/bin/find /etc/shadow -perm 0000"
+    fix_command_debian = "/bin/chmod 0000 /etc/shadow"
+    fix_command_redhat = "/bin/chmod 0000 /etc/shadow"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38511(connection):
+    stig_id = "V-38511"
+    check_command_debian = "/sbin/sysctl -a | grep \"net.ipv4.ip_forward\s\?=\s\?0\""
+    check_command_redhat = "/sbin/sysctl -a | grep \"net.ipv4.ip_forward\s\?=\s\?0\""
+    fix_command_debian = "/bin/echo \"net.ipv4.ip_forward = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.ip_forward = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38512(connection):
+    stig_id = "V-38512"
+    # TODO: in debian systems this isn't needed right?
+    check_command_debian = "None"
+    check_command_redhat = "/sbin/chkconfig --list iptables | /bin/grep \"[2-5]:on\""
+    fix_command_debian = "None"
+    fix_command_redhat = "/sbin/chkconfig iptables on && /sbin/service iptables start"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38513(connection):
+    stig_id = "V-38513"
+    check_command_debian = ""
+    check_command_redhat = ""
+    fix_command_debian = ""
+    fix_command_redhat = ""
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
 def stig_v_(connection):
     stig_id = ""
     check_command_debian = ""
@@ -355,6 +663,29 @@ def main():
     stig_v_38473(conn)
     stig_v_38475(conn)
     stig_v_38477(conn)
+    stig_v_38478(conn)
+    stig_v_38479(conn)
+    stig_v_38480(conn)
+    stig_v_38482(conn)
+    stig_v_38483(conn)
+    stig_v_38487(conn)
+    stig_v_38489(conn)
+    stig_v_38490(conn)
+    stig_v_38491(conn)
+    stig_v_38492(conn)
+    stig_v_38494(conn)
+    stig_v_38495(conn)
+    stig_v_38497(conn)
+    stig_v_38498(conn)
+    stig_v_38499(conn)
+    stig_v_38500(conn)
+    stig_v_38501(conn)
+    stig_v_38502(conn)
+    stig_v_38503(conn)
+    stig_v_38504(conn)
+    stig_v_38511(conn)
+    stig_v_38512(conn)
+    stig_v_38513(conn)
 
     conn.commit()
     conn.close()
