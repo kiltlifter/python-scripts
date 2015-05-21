@@ -51,7 +51,7 @@ def stig_v_38438(connection):
     # Inserts audit=1 into the GRUB_CMDLINE_LINUX directive
     fix_command_debian = """/bin/sed -i 's/\(GRUB_CMDLINE_LINUX=".*\)"/\1 audit=1"/' /etc/default/grub"""
     # Inserts audit=1 on to the kernel parameter line of /etc/grub.conf
-    fix_command_redhat = """/bin/sed -e 's/.*\(kernel\s.*\)/\1 audit=1/' /etc/grub.conf"""
+    fix_command_redhat = """/bin/sed -i 's/.*\(kernel\s.*\)/\1 audit=1/' /etc/grub.conf"""
     values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
     update_row(connection, values)
 
@@ -406,7 +406,7 @@ def stig_v_38482(connection):
     # Returns a 0 if set properly
     check_command_redhat = "/bin/grep dcredit=-1 /etc/pam.d/system-auth"
     fix_command_debian = "None"
-    fix_command_redhat = "/bin/sed -e 's/pam_cracklib.so/pam_cracklib.so dcredit=-1/' /etc/pam.d/system-auth"
+    fix_command_redhat = "/bin/sed -i 's/pam_cracklib.so/pam_cracklib.so dcredit=-1/' /etc/pam.d/system-auth"
     values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
     update_row(connection, values)
 
@@ -562,7 +562,7 @@ def stig_v_38501(connection):
         /bin/sed -i '/^auth.*pam_unix\.so/a \
         auth [default=die] pam_faillock.so authfail deny=3 unlock_time=604800 fail_interval=900\n \
         auth required pam_faillock.so authsucc deny=3 unlock_time=604800 fail_interval=900' \
-        /etc/pam.d/system-auth /etc/pam.d/password-auth
+        /etc/pam.d/system-auth-ac
     """
     values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
     update_row(connection, values)
@@ -1005,6 +1005,627 @@ def stig_v_38541(connection):
     update_row(connection, values)
 
 
+def stig_v_38542(connection):
+    stig_id = "V-38542"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.all.rp_filter\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.all.rp_filter\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"^net.ipv4.conf.all.rp_filter = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"^net.ipv4.conf.all.rp_filter = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38543(connection):
+    stig_id = "V-38543"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chmod -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chmod -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chmod -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chmod -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chmod -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chmod -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chmod -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chmod -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38544(connection):
+    stig_id = "V-38544"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.default.rp_filter\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.default.rp_filter\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.default.rp_filter = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.default.rp_filter = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38545(connection):
+    stig_id = "38545"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S chown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S chown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38546(connection):
+    stig_id = "V-38546"
+    check_command_debian = "/bin/grep -re \"options ipv6 disable\s*=\s*1\" /etc/modprobe.d/"
+    check_command_redhat = "/bin/grep -re \"options ipv6 disable\s*=\s*1\" /etc/modprobe.d/"
+    fix_command_debian = "/bin/echo \"options ipv6 disable=1\" > /etc/modprobe.d/ipv6-disable.conf"
+    fix_command_redhat = "/bin/echo \"options ipv6 disable=1\" > /etc/modprobe.d/ipv6-disable.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38547(connection):
+    stig_id = "V-38547"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmod -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38548(connection):
+    stig_id = "38548"
+    check_command_debian = "/bin/grep -e \"net\.ipv6\.conf\.default\.accept_redirects\s*=\s*0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep -e \"net\.ipv6\.conf\.default\.accept_redirects\s*=\s*0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo -e \"net.ipv6.conf.default.accept_redirects = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo -e \"net.ipv6.conf.default.accept_redirects = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38550(connection):
+    stig_id = "V-38550"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchmodat -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38552(connection):
+    stig_id = "V-38552"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38554(connection):
+    stig_id = "V-38554"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fchownat -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38555(connection):
+    stig_id = "V-38555"
+    check_command_debian = "None"
+    check_command_redhat = "/sbin/chkconfig --list iptables | /bin/grep -o \"[2345]:on\""
+    fix_command_debian = "None"
+    fix_command_redhat = "/sbin/chkconfig iptables on && /sbin/service iptables start"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38556(connection):
+    stig_id = "V-38556"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fremovexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38557(connection):
+    stig_id = "V-38557"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S fsetxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38558(connection):
+    stig_id = "V-38558"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lchown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lchown -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lchown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lchown -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38559(connection):
+    stig_id = "V-38559"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lremovexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38561(connection):
+    stig_id = "V-38561"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S lsetxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38563(connection):
+    stig_id = "V-38563"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S removexattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38565(connection):
+    stig_id = "V-38565"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S setxattr -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38568(connection):
+    stig_id = "V-38568"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S mount -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S mount -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S mount -F auid>=500 -F auid!=4294967295 -k perm_mod" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S mount -F auid=0 -k perm_mod" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S mount -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S mount -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S mount -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S mount -F auid=0 -k perm_mod" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38569(connection):
+    stig_id = "V-38569"
+    check_command_debian = "None"
+    # Returns a 0 if set properly
+    check_command_redhat = "/bin/grep ucredit=-1 /etc/pam.d/system-auth"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i 's/pam_cracklib.so/pam_cracklib.so ucredit=-1/' /etc/pam.d/system-auth"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38570(connection):
+    stig_id = "V-38570"
+    check_command_debian = "None"
+    # Returns a 0 if set properly
+    check_command_redhat = "/bin/grep ocredit=-1 /etc/pam.d/system-auth"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i 's/pam_cracklib.so/pam_cracklib.so ocredit=-1/' /etc/pam.d/system-auth"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38571(connection):
+    stig_id = "V-38571"
+    check_command_debian = "None"
+    # Returns a 0 if set properly
+    check_command_redhat = "/bin/grep lcredit=-1 /etc/pam.d/system-auth"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i 's/pam_cracklib.so/pam_cracklib.so lcredit=-1/' /etc/pam.d/system-auth"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38572(connection):
+    stig_id = "V-38572"
+    check_command_debian = "None"
+    # Returns a 0 if set properly
+    check_command_redhat = "/bin/grep difok=4 /etc/pam.d/system-auth"
+    fix_command_debian = "None"
+    fix_command_redhat = "/bin/sed -i 's/pam_cracklib.so/pam_cracklib.so difok=4/' /etc/pam.d/system-auth"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38573(connection):
+    stig_id = "V-38573"
+    check_command_debian = "None"
+    check_command_redhat = """/bin/grep \"fail_interval\" /etc/pam.d/system-auth-ac && \
+        /bin/grep \"fail_interval\" /etc/pam.d/password-auth-ac
+    """
+    fix_command_debian = "None"
+    fix_command_redhat = """
+        /bin/sed -i '/^auth.*pam_unix\.so/a \
+        auth [default=die] pam_faillock.so authfail deny=3 unlock_time=604800 fail_interval=900\n \
+        auth required pam_faillock.so authsucc deny=3 unlock_time=604800 fail_interval=900' \
+        /etc/pam.d/system-auth-ac /etc/pam.d/password-auth-ac
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38574(connection):
+    stig_id = "V-38574"
+    check_command_debian = "None"
+    check_command_redhat = """
+        /bin/grep sha512 /etc/pam.d/system-auth
+    """
+    fix_command_debian = "None"
+    fix_command_redhat = """
+        /bin/sed -i 's/^\(password\s*sufficient\s*pam_unix.so\)/\1 sha512/' /etc/pam.d/system-auth
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38575(connection):
+    stig_id = "V-38575"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid=0 -k delete" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid=0 -k delete" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=ARCH -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid=0 -k delete" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=ARCH -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid=0 -k delete" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38576(connection):
+    stig_id = "V-38576"
+    check_command_debian = "/bin/grep \"ENCRYPT_METHOD SHA512\" /etc/login.defs"
+    check_command_redhat = "/bin/grep \"ENCRYPT_METHOD SHA512\" /etc/login.defs"
+    fix_command_debian = """
+        if [[ -z $(/bin/grep "ENCRYPT_METHOD" /etc/login.defs) ]];then \
+        /bin/echo "ENCRYPT_METHOD SHA512" >> /etc/login.defs;else \
+        /bin/sed -i 's/\(ENCRYPT_METHOD\s*\)\(.*\)/\1SHA512/' /etc/login.defs;fi
+    """
+    fix_command_redhat = """
+        if [[ -z $(/bin/grep "ENCRYPT_METHOD" /etc/login.defs) ]];then \
+        /bin/echo "ENCRYPT_METHOD SHA512" >> /etc/login.defs;else \
+        /bin/sed -i 's/\(ENCRYPT_METHOD\s*\)\(.*\)/\1SHA512/' /etc/login.defs;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38577(connection):
+    stig_id = "V-38577"
+    check_command_debian = "None"
+    check_command_redhat = "/bin/grep \"crypt_style = sha512\" /etc/libuser.conf"
+    fix_command_debian = "None"
+    fix_command_redhat = """
+        if [[ -z $(/bin/grep "ENCRYPT_METHOD" /etc/login.defs) ]];then \
+        /bin/echo "crypt_style = sha512" >> /etc/libuser.conf;else \
+        /bin/sed -i 's/^\(crypt_style\s*=\s*\)\(.*\)/\1sha512/' /etc/libuser.conf;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38578(connection):
+    stig_id = "V-38578"
+    check_command_debian = "/bin/grep \"-w /etc/sudoers -p wa -k actions\" /etc/audit/audit.rules"
+    check_command_redhat = "/bin/grep \"-w /etc/sudoers -p wa -k actions\" /etc/audit/audit.rules"
+    fix_command_debian = "/bin/echo -e \"-w /etc/sudoers -p wa -k actions\" >> /etc/audit/audit.rules"
+    fix_command_redhat = "/bin/echo -e \"-w /etc/sudoers -p wa -k actions\" >> /etc/audit/audit.rules"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38579(connection):
+    stig_id = "V-38579"
+    check_command_debian = "/usr/bin/stat /etc/default/grub -c %U | /bin/grep root"
+    check_command_redhat = "/usr/bin/stat /etc/grub.conf -c %U | /bin/grep root"
+    fix_command_debian = "/bin/chown root /etc/default/grub"
+    fix_command_redhat = "/bin/chown root /etc/grub.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38580(connection):
+    stig_id = "V-38580"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-w /sbin/insmod -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /sbin/rmmod -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /sbin/modprobe -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S init_module -S delete_module -k modules" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/grep -e "-w /sbin/insmod -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /sbin/rmmod -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /sbin/modprobe -p x -k modules" /etc/audit/audit.rules && \
+        /bin/grep -e "-a always,exit -F arch=${ARCH} -S init_module -S delete_module -k modules" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-w /sbin/insmod -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-w /sbin/rmmod -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-w /sbin/modprobe -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S init_module -S delete_module -k modules" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then ARCH=b64;else ARCH=b32;fi && \
+        /bin/echo -e "-w /sbin/insmod -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-w /sbin/rmmod -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-w /sbin/modprobe -p x -k modules" >> /etc/audit/audit.rules && \
+        /bin/echo -e "-a always,exit -F arch=${ARCH} -S init_module -S delete_module -k modules" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38581(connection):
+    stig_id = ""
+    check_command_debian = "/usr/bin/stat /etc/default/grub -c %G | /bin/grep root"
+    check_command_redhat = "/usr/bin/stat /etc/grub.conf -c %G | /bin/grep root"
+    fix_command_debian = "/bin/chgrp root /etc/default/grub"
+    fix_command_redhat = "/bin/chgrp root /etc/grub.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38582(connection):
+    stig_id = ""
+    check_command_debian = ""
+    check_command_redhat = ""
+    fix_command_debian = ""
+    fix_command_redhat = ""
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
 def stig_v_(connection):
     stig_id = ""
     check_command_debian = ""
@@ -1089,6 +1710,37 @@ def main():
     stig_v_38538(conn)
     stig_v_38539(conn)
     stig_v_38541(conn)
+    stig_v_38542(conn)
+    stig_v_38543(conn)
+    stig_v_38544(conn)
+    stig_v_38545(conn)
+    stig_v_38546(conn)
+    stig_v_38547(conn)
+    stig_v_38548(conn)
+    stig_v_38550(conn)
+    stig_v_38552(conn)
+    stig_v_38554(conn)
+    stig_v_38555(conn)
+    stig_v_38556(conn)
+    stig_v_38557(conn)
+    stig_v_38558(conn)
+    stig_v_38559(conn)
+    stig_v_38561(conn)
+    stig_v_38563(conn)
+    stig_v_38565(conn)
+    stig_v_38568(conn)
+    stig_v_38569(conn)
+    stig_v_38570(conn)
+    stig_v_38571(conn)
+    stig_v_38572(conn)
+    stig_v_38573(conn)
+    stig_v_38574(conn)
+    stig_v_38575(conn)
+    stig_v_38576(conn)
+    stig_v_38577(conn)
+    stig_v_38578(conn)
+    stig_v_38579(conn)
+    stig_v_38580(conn)
 
     conn.commit()
     conn.close()
