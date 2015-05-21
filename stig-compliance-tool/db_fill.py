@@ -1,5 +1,7 @@
 __author__ = 'sdouglas'
 
+# Note: this script is only intended to fill the database. Please excuse the verbosity and non-compiance to standards
+# aka, the hackiness.
 
 import sqlite3
 
@@ -621,9 +623,384 @@ def stig_v_38512(connection):
 def stig_v_38513(connection):
     stig_id = "V-38513"
     check_command_debian = ""
-    check_command_redhat = ""
+    check_command_redhat = "/bin/grep \"^:INPUT DROP \[0:0\]\" /etc/sysconfig/iptables"
     fix_command_debian = ""
-    fix_command_redhat = ""
+    fix_command_redhat = """
+        if [[ -n $(/bin/grep "^:INPUT ACCEPT \[0:0\]" /etc/sysconfig/iptables) ]];then \
+        /bin/sed -i 's/:INPUT ACCEPT \[0:0\]/:INPUT DROP \[0:0\]/' /etc/sysconfig/iptables; \
+        elif [[ -z $(/bin/grep "^:INPUT DROP \[0:0\]" /etc/sysconfig/iptables)  ]];then \
+        /bin/sed -i '/\*filter/a:INPUT DROP \[0:0\]' /etc/sysconfig/iptables;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38514(connection):
+    stig_id = "V-38514"
+    check_command_debian = "/bin/grep -ir \"install dccp /bin/true\" /etc/modprobe.d"
+    check_command_redhat = "/bin/grep -ir \"install dccp /bin/true\" /etc/modprobe.d"
+    fix_command_debian = "/bin/echo \"install dccp /bin/true\" > /etc/modprobe.d/dccp-load.conf"
+    fix_command_redhat = "/bin/echo \"install dccp /bin/true\" > /etc/modprobe.d/dccp-load.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38515(connection):
+    stig_id = "V-38515"
+    check_command_debian = "/bin/grep -ir \"install sctp /bin/true\" /etc/modprobe.d"
+    check_command_redhat = "/bin/grep -ir \"install sctp /bin/true\" /etc/modprobe.d"
+    fix_command_debian = "/bin/echo \"install sctp /bin/true\" > /etc/modprobe.d/sctp-load.conf"
+    fix_command_redhat = "/bin/echo \"install sctp /bin/true\" > /etc/modprobe.d/sctp-load.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38516(connection):
+    stig_id = "V-38516"
+    check_command_debian = "/bin/grep -ir \"install rds /bin/true\" /etc/modprobe.d"
+    check_command_redhat = "/bin/grep -ir \"install rds /bin/true\" /etc/modprobe.d"
+    fix_command_debian = "/bin/echo \"install rds /bin/true\" > /etc/modprobe.d/rds-load.conf"
+    fix_command_redhat = "/bin/echo \"install rds /bin/true\" > /etc/modprobe.d/rds-load.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38517(connection):
+    stig_id = "V-38517"
+    check_command_debian = "/bin/grep -ir \"install tipc /bin/true\" /etc/modprobe.d"
+    check_command_redhat = "/bin/grep -ir \"install tipc /bin/true\" /etc/modprobe.d"
+    fix_command_debian = "/bin/echo \"install tipc /bin/true\" > /etc/modprobe.d/tipc-load.conf"
+    fix_command_redhat = "/bin/echo \"install tipc /bin/true\" > /etc/modprobe.d/tipc-load.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38518(connection):
+    stig_id = "V-38518"
+    check_command_debian = """
+        /bin/grep -o '\/\(dev\|var\)\/[a-zA-Z\/0-9\.]*' /etc/rsyslog.conf | /usr/bin/xargs /usr/bin/stat -c %n:%U
+    """
+    check_command_redhat = """
+        /bin/grep -o '\/\(dev\|var\)\/[a-zA-Z\/0-9\.]*' /etc/rsyslog.conf | /usr/bin/xargs /usr/bin/stat -c %n:%U
+    """
+    fix_command_debian = """
+        /bin/chown -R root $(/bin/grep -o '\/\(dev\|var\)\/[a-zA-Z\/0-9\.]*' /etc/rsyslog.conf) && \
+        /bin/sed -i 's/^\(\$\(File\|PrivDropTo\)\(Owner\|Group\|User\)\s\+\).*/\1root/' /etc/rsyslog.conf
+    """
+    fix_command_redhat = """
+        /bin/chown -R root $(/bin/grep -o '\/\(dev\|var\)\/[a-zA-Z\/0-9\.]*' /etc/rsyslog.conf)
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38520(connection):
+    stig_id = "V-38520"
+    # The user will manually have to configure a remote syslog server.
+    check_command_debian = "/bin/grep -o '^\*\.\*\s\(:omrelp\|@\|@@\).*' /etc/rsyslog.conf"
+    check_command_redhat = "/bin/grep -o '^\*\.\*\s\(:omrelp\|@\|@@\).*' /etc/rsyslog.conf"
+    fix_command_debian = "None"
+    fix_command_redhat = "None"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38521(connection):
+    stig_id = "V-38521"
+    # The user will manually have to configure a remote syslog server.
+    check_command_debian = "/bin/grep -o '^\*\.\*\s\(:omrelp\|@\|@@\).*' /etc/rsyslog.conf"
+    check_command_redhat = "/bin/grep -o '^\*\.\*\s\(:omrelp\|@\|@@\).*' /etc/rsyslog.conf"
+    fix_command_debian = "None"
+    fix_command_redhat = "None"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38522(connection):
+    stig_id = "V-38522"
+    # Auditd is probally not installed on debian systems by default
+    check_command_debian = "/sbin/auditctl -l | /bin/grep settimeofday"
+    check_command_redhat = "/sbin/auditctl -l | /bin/grep settimeofday"
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then \
+        /bin/echo "-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules" >> \
+        /etc/audit/audit.rules;else \
+        /bin/echo "-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules" >> /etc/audit/audit.rules;fi
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then \
+        /bin/echo "-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules" >> \
+        /etc/audit/audit.rules;else \
+        /bin/echo "-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules" >> /etc/audit/audit.rules;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38523(connection):
+    stig_id = "V-38523"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.all.accept_source_route\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.all.accept_source_route\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.all.accept_source_route = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.all.accept_source_route = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38524(connection):
+    stig_id = "V-38524"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.all.accept_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.all.accept_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.all.accept_redirects = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.all.accept_redirects = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38525(connection):
+    stig_id = "V-38525"
+    check_command_debian = """
+        if [[ $(/bin/uname -i) == "x86" ]];then \
+        /sbin/auditctl -l | grep stime;fi
+    """
+    check_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86" ]];then \
+        /sbin/auditctl -l | grep stime;fi
+    """
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86" ]];then \
+        /bin/echo "-a always,exit -F arch=b32 -S stime -k audit_time_rules" >> \
+        /etc/audit/audit.rules;fi
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86" ]];then \
+        /bin/echo "-a always,exit -F arch=b32 -S stime -k audit_time_rules" >> \
+        /etc/audit/audit.rules;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38526(connection):
+    stig_id = "V-38526"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.all.secure_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.all.secure_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.all.secure_redirects = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.all.secure_redirects = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38527(connection):
+    stig_id = "V-38527"
+    check_command_debian = "/sbin/auditctl -l | /bin/grep clock_settime"
+    check_command_redhat = "/sbin/auditctl -l | /bin/grep clock_settime"
+    fix_command_debian = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then \
+        /bin/echo "-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules" >> \
+        /etc/audit/audit.rules;else \
+        /bin/echo "-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules" >> /etc/audit/audit.rules;fi
+    """
+    fix_command_redhat = """
+        if [[ $(/bin/uname -i) == "x86_64" ]];then \
+        /bin/echo "-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules" >> \
+        /etc/audit/audit.rules;else \
+        /bin/echo "-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules" >> /etc/audit/audit.rules;fi
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38528(connection):
+    stig_id = "V-38528"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.all.log_martians\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.all.log_martians\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.all.log_martians = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.all.log_martians = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38529(connection):
+    stig_id = "V-38529"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.default.accept_source_route\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.default.accept_source_route\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.default.accept_source_route = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.default.accept_source_route = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38530(connection):
+    stig_id = "V-38530"
+    check_command_debian = "/bin/grep \"audit_time_rules\" /etc/audit/audit.rules"
+    check_command_redhat = "/bin/grep \"audit_time_rules\" /etc/audit/audit.rules"
+    fix_command_debian = "/bin/echo \"-w /etc/localtime -p wa -k audit_time_rules\" >> /etc/audit/audit.rules"
+    fix_command_redhat = "/bin/echo \"-w /etc/localtime -p wa -k audit_time_rules\" >> /etc/audit/audit.rules"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38531(connection):
+    stig_id = "V-38531"
+    check_command_debian = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38532(connection):
+    stig_id = "V-38532"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.default.secure_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.default.secure_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.default.secure_redirects = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.default.secure_redirects = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38533(connection):
+    stig_id = "V-38533"
+    check_command_debian = "/bin/grep \"^net.ipv4.conf.default.accept_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.conf.default.accept_redirects\s\+\?=\s\+\?0\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.conf.default.accept_redirects = 0\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.conf.default.accept_redirects = 0\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38534(connection):
+    stig_id = "V-38534"
+    check_command_debian = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38535(connection):
+    stig_id = "V-38535"
+    check_command_debian = "/bin/grep \"^net.ipv4.icmp_echo_ignore_broadcasts\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.icmp_echo_ignore_broadcasts\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.icmp_echo_ignore_broadcasts = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.icmp_echo_ignore_broadcasts = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38536(connection):
+    stig_id = "V-38536"
+    check_command_debian = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38537(connection):
+    stig_id = "V-38537"
+    check_command_debian = "/bin/grep \"^net.ipv4.icmp_ignore_bogus_error_responses\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.icmp_ignore_bogus_error_responses\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.icmp_ignore_bogus_error_responses = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.icmp_ignore_bogus_error_responses = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38538(connection):
+    stig_id = "V-38538"
+    check_command_debian = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    check_command_redhat = """
+        /bin/grep -e "-w /etc/group -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/passwd -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/gshadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/shadow -p wa -k audit_account_changes" /etc/audit/audit.rules && \
+        /bin/grep -e "-w /etc/security/opasswd -p wa -k audit_account_changes" /etc/audit/audit.rules
+    """
+    fix_command_debian = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    fix_command_redhat = """
+        /bin/echo -e "-w /etc/group -p wa -k audit_account_changes\n-w /etc/passwd -p wa -k audit_account_changes\n-w /etc/gshadow -p wa -k audit_account_changes\n-w /etc/shadow -p wa -k audit_account_changes\n-w /etc/security/opasswd -p wa -k audit_account_changes" >> /etc/audit/audit.rules
+    """
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38539(connection):
+    stig_id = "V-38539"
+    check_command_debian = "/bin/grep \"^net.ipv4.tcp_syncookies\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    check_command_redhat = "/bin/grep \"^net.ipv4.tcp_syncookies\s\+\?=\s\+\?1\" /etc/sysctl.conf"
+    fix_command_debian = "/bin/echo \"net.ipv4.tcp_syncookies = 1\" >> /etc/sysctl.conf"
+    fix_command_redhat = "/bin/echo \"net.ipv4.tcp_syncookies = 1\" >> /etc/sysctl.conf"
+    values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
+    update_row(connection, values)
+
+
+def stig_v_38541(connection):
+    stig_id = "V-38541"
+    check_command_debian = "/bin/grep -e \"-w /etc/selinux/ -p wa -k MAC-policy\" /etc/audit/audit.rules"
+    check_command_redhat = "/bin/grep -e \"-w /etc/selinux/ -p wa -k MAC-policy\" /etc/audit/audit.rules"
+    fix_command_debian = "/bin/echo \"-w /etc/selinux/ -p wa -k MAC-policy\" >> /etc/audit/audit.rules"
+    fix_command_redhat = "/bin/echo \"-w /etc/selinux/ -p wa -k MAC-policy\" >> /etc/audit/audit.rules"
     values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
     update_row(connection, values)
 
@@ -686,6 +1063,32 @@ def main():
     stig_v_38511(conn)
     stig_v_38512(conn)
     stig_v_38513(conn)
+    stig_v_38514(conn)
+    stig_v_38515(conn)
+    stig_v_38516(conn)
+    stig_v_38517(conn)
+    stig_v_38518(conn)
+    stig_v_38520(conn)
+    stig_v_38521(conn)
+    stig_v_38522(conn)
+    stig_v_38523(conn)
+    stig_v_38524(conn)
+    stig_v_38525(conn)
+    stig_v_38526(conn)
+    stig_v_38527(conn)
+    stig_v_38528(conn)
+    stig_v_38529(conn)
+    stig_v_38530(conn)
+    stig_v_38531(conn)
+    stig_v_38532(conn)
+    stig_v_38533(conn)
+    stig_v_38534(conn)
+    stig_v_38535(conn)
+    stig_v_38536(conn)
+    stig_v_38537(conn)
+    stig_v_38538(conn)
+    stig_v_38539(conn)
+    stig_v_38541(conn)
 
     conn.commit()
     conn.close()
