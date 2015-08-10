@@ -1617,11 +1617,12 @@ def stig_v_38581(connection):
 
 
 def stig_v_38582(connection):
-    stig_id = ""
-    check_command_debian = ""
-    check_command_redhat = ""
-    fix_command_debian = ""
-    fix_command_redhat = ""
+    stig_id = "V-38582"
+    check_command_debian = "None"
+    # the correct exit code should be 1 in this case
+    check_command_redhat = "/sbin/chkconfig --list xinet | /bin/grep \"[2345]:on\""
+    fix_command_debian = "None"
+    fix_command_redhat = "/sbin/chkconfig xinetd off && /sbin/service xinetd stop"
     values = [check_command_debian, check_command_redhat, fix_command_debian, fix_command_redhat, stig_id]
     update_row(connection, values)
 
