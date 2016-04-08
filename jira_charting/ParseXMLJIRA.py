@@ -13,7 +13,7 @@ class Parser():
 	def init(self):
 		None
 	
-	def parse_xml(self, file_name):
+	def parse_tiger_team_xml(self, file_name):
 		try:
 			tree = ET.parse(file_name)
 			root = tree.getroot()

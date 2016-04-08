@@ -11,7 +11,8 @@ def main():
 	# Override to used a defined directory for testing
 	team_data.storage_location = "JiraData-2016-04-07-1305"
 	# Specify true in order to use canned data
-	maker.make_data(canned=True)
+	#maker.make_data(canned=True)
+	maker.testing()
 
 if __name__ == "__main__":
 	main()

@@ -2,6 +2,7 @@ import ParseXMLJIRA
 import BarChartJIRA
 import ExtractDataJIRA
 import PieChartData
+import ExtractFromXML
 import EmailFormater
 import LineChartJIRA
 import RequestXML
@@ -154,3 +155,8 @@ class Make():
 		except Exception as e:
 			print "Error running initial make data."
 			print str(e)
+
+	def testing(self):
+		self.team_data.filename = "%s/Tiger Team - Created and Resolved This Month.xml" % self.team_data.storage_location
+		parser = ExtractFromXML.Parse(self.team_data.filename)
+		print parser.run()
