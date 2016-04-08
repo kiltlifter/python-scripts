@@ -12,7 +12,7 @@ class Graph():
 	def init(self):
 		None
 
-	def bar_chart(self, save_file_name, formatted_data, chart_title):
+	def bar_chart(self, save_file_name, formatted_data, chart_title, point_total=None):
 		wb = Workbook()
 		ws = wb.active
 	
@@ -30,7 +30,7 @@ class Graph():
 		"""
 		rows = formatted_data
 		for row in rows:
-		    ws.append(tuple(row))
+			ws.append(row)
 		
 		title_regex = re.compile(r'\w+\s.*by\s(.*)')
 		m = title_regex.match(chart_title)
@@ -63,5 +63,6 @@ class Graph():
 		chart2.width = 16.9418	
 
 		ws.add_chart(chart2, "E21")
-
+		ws['A10'] = "Point Total"
+		ws['B10'] = "=SUM(B2:B8)"
 		wb.save(save_file_name + ".xlsx")

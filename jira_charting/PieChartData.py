@@ -12,21 +12,21 @@ class PieGraph():
 		None
 
 
-	def chart(self, chart_data, file_name_data, graph_name, point_total=None):
+	def chart(self, save_file_path, chart_data, graph_title, point_total=None):
 		data = chart_data
 		
 		wb = Workbook()
 		ws = wb.active
 		
 		for row in data:
-		    ws.append(row)
+			ws.append(row)
 		
 		pie = PieChart()
 		labels = Reference(ws, min_col=1, min_row=2, max_row=len(data))
 		data = Reference(ws, min_col=2, min_row=1, max_row=len(data))
 		pie.add_data(data, titles_from_data=True)
 		pie.set_categories(labels)
-		pie.title = graph_name
+		pie.title = graph_title
 		pie.dataLabels
 		pie.height = 10.16
 		pie.width = 16.9418		
@@ -36,4 +36,4 @@ class PieGraph():
 		
 		ws.add_chart(pie, "D1")
 		ws["C1"] = point_total
-		wb.save(file_name_data + ".xlsx")
+		wb.save(save_file_path + ".xlsx")

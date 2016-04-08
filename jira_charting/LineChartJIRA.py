@@ -10,7 +10,7 @@ class Graph():
 	def init(self):
 		None
 
-	def date_axis_line_chart(self, save_file_name, formatted_data):
+	def date_axis_line_chart(self, save_file_path, chart_data, graph_title, point_total=None):
 		wb = Workbook()
 		ws = wb.active
 	
@@ -26,14 +26,14 @@ class Graph():
 		    [date(2015,9, 6), 20, 40, 35],
 		]
 		"""
-		rows = formatted_data
+		rows = chart_data
 	
 		for row in rows:
-		    ws.append(row)
+			ws.append(row)
 		
 		# Chart with date axis
 		c2 = LineChart()
-		c2.title = "Tiger Team - Bug Severity"
+		c2.title = graph_title
 		c2.style = 12
 		c2.y_axis.title = "Story Points"
 		c2.y_axis.crossAx = 500
@@ -41,11 +41,12 @@ class Graph():
 		c2.x_axis.number_format = 'd-mmm'
 		c2.x_axis.majorTimeUnit = "days"
 		c2.x_axis.title = "Date"
-		
+
+		data = Reference(ws, min_col=2, min_row=1, max_col=4, max_row=7)
 		c2.add_data(data, titles_from_data=True)
 		dates = Reference(ws, min_col=1, min_row=2, max_row=7)
 		c2.set_categories(dates)
 		
 		ws.add_chart(c2, "G1")
 		
-		wb.save(save_file_name)
+		wb.save(save_file_path + ".xlsx")

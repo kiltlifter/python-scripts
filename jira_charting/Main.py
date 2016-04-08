@@ -1,26 +1,17 @@
 #!/usr/bin/python
 
 
-import sys
-import DataMaker 
+import DataMaker
+import TeamData
 
 
 def main():
-	# Eventially a the class that makes a request for the xml data
-	# should be used rather than having to base an xml file manually.
-	# I think you should then be able to just supply the DataMaker
-	# with the path to the directory.
-	try:
-		#filename = sys.argv[1]
-		filename = "Tiger Team - Rollover - Sprint 16 2016-04-05.xml"
-	except:
-		print "No file supplied."
-		exit()
-
-	maker = DataMaker.Make()
-	#maker.process_team(filename, "Tiger Team")
-	maker.testing(filename)
-
+	team_data = TeamData.DataStore()
+	maker = DataMaker.Make(team_data)
+	# Override to used a defined directory for testing
+	team_data.storage_location = "JiraData-2016-04-07-1305"
+	# Specify true in order to use canned data
+	maker.make_data(canned=True)
 
 if __name__ == "__main__":
 	main()
