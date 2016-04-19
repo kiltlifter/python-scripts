@@ -3,18 +3,28 @@ import BarChartJIRA
 import ExtractDataJIRA
 import PieChartData
 import ExtractFromXML
-import EmailFormater
 import LineChartJIRA
 import RequestXML
+#import ExecutionLog
 import datetime
 import os
+import logging
 
 # This is added to saved file names
 date_stamp = str(datetime.date.today())
 
+
 class Make():
 	def __init__(self, team_data):
 		self.team_data = team_data
+		self.logfile_path = "%s/%s" % (self.team_data.storage_location, self.team_data.logfile_name)
+		try:
+			logging.basicConfig(filename=self.logfile_path, level=logging.INFO)
+			logging.info("%s: Starting Execution...", str(datetime.datetime.today()))
+			print "running"
+		except Exception as e:
+			print str(e)
+			exit()
 
 	def url_is_in(self, url):
 		for k in self.team_data.team_naming_data:
@@ -156,7 +166,7 @@ class Make():
 			print "Error running initial make data."
 			print str(e)
 
-	def testing(self):
-		self.team_data.filename = "%s/Tiger Team - Created and Resolved This Month.xml" % self.team_data.storage_location
+	def testing(self, filename):
+		self.team_data.filename = "%s/%s" % (self.team_data.storage_location, filename)
 		parser = ExtractFromXML.Parse(self.team_data.filename)
 		print parser.run()

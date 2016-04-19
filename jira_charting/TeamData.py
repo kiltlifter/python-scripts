@@ -9,6 +9,7 @@ time_stamp = time.strftime('%H%M')
 class DataStore():
 	def __init__(self):
 		self.storage_location = "JiraData-%s-%s" % (date_stamp, time_stamp)
+		self.logfile_name = "jira_charting.log"
 		# Store all naming data for graphs in a dictionary for ease of use.
 		# In the future a implementing this in json, csv, or something else
 		# might be a better option

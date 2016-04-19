@@ -13,7 +13,7 @@ class Parser():
 	def init(self):
 		None
 	
-	def parse_tiger_team_xml(self, file_name):
+	def parse_xml(self, file_name):
 		try:
 			tree = ET.parse(file_name)
 			root = tree.getroot()
@@ -21,6 +21,7 @@ class Parser():
 			print "Error opening %s" % file_name
 			print "%s" % type(self).__name__
 			print str(e)
+			exit()
 
 		item_list = []
 		for channel in root:
