@@ -33,13 +33,10 @@ class Parse:
 			except:
 				pass
 
-
 	def parse_issues(self):
 		data = self.remove_cruft()
-		issue_parser = IssueData.Parser()
 		for issue in data['item']:
-			print issue_parser.get_story_points(issue)
-
+			print IssueData.Parser(issue).get_all()
 
 
 	def run(self):

@@ -5,7 +5,6 @@ import PieChartData
 import ExtractFromXML
 import LineChartJIRA
 import RequestXML
-#import ExecutionLog
 import datetime
 import os
 import logging
