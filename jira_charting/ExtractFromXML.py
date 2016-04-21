@@ -1,6 +1,6 @@
 import xmltodict
 import json
-import IssueData
+import IssueUtil
 
 class Parse:
 	def __init__(self, filename):
@@ -24,19 +24,10 @@ class Parse:
 		with open(self.xml_file[:-4]+".json", "w") as f:
 			f.write(json_data)
 
-	# When passed a single issue, return the amount of story points as a float
-	def get_story_points(self, issue):
-		for field in issue['customfields']['customfield']:
-			try:
-				if field['customfieldname'] == "Story Points":
-					print field['customfieldvalues']['customfieldvalue']
-			except:
-				pass
-
 	def parse_issues(self):
 		data = self.remove_cruft()
 		for issue in data['item']:
-			print IssueData.Parser(issue).get_all()
+			print IssueUtil.Parser(issue).get_all()
 
 
 	def run(self):
